@@ -1,0 +1,9 @@
+name = "graphos-lean-critique"
+version = "0.1.0"
+defaultTargets = ["GraphosLeanCritique"]
+
+[[lean_lib]]
+name = "GraphosLeanCritique"
+srcDir = "."
+
+packagesDir = "cache"

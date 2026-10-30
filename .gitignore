@@ -1,0 +1,7 @@
+*.olean
+*.c
+*.o
+*.a
+.lake/
+lake-packages/
+cache/

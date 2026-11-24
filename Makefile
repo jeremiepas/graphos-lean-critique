@@ -47,9 +47,14 @@ endif
 CCFLAGS  ?= -O2 -fPIC -Wall -Wextra -Werror
 # GHC consumer (tests the ABI from the side that actually links it).
 GHC ?= ghc
-LEAN_LINK_LIBS ?= -lleancpp -lLean -lStd -lInit -lleanrt -lstdc++ -lgmp -luv -lm -ldl -lpthread
+# Runtime link line comes from the toolchain itself: elan's Lean links libc++,
+# Nix's links libstdc++. See scripts/lean-link-libs.sh.
+LEAN_LINK_LIBS ?= $(shell LEANC="$(LEANC)" bash scripts/lean-link-libs.sh 2>/dev/null)
 EXTRA_LIB_DIRS ?=
 EXTRA_LDFLAGS ?=
+# Same link line, spelled for GHC: GHC parses -Wl,... as a warning flag and
+# rejects bare -pthread, so both have to go through the -optl prefix.
+GHC_LEAN_LIBS := $(shell LEANC="$(LEANC)" bash scripts/lean-link-libs.sh 2>/dev/null | sed -e 's/-Wl,/-optl-Wl,/g' -e 's/ -pthread/ -optl-pthread/g')
 PACKED_SEMVER := $(shell echo $(VERSION) | awk -F. '{print $$1*10000 + $$2*100 + $$3}')
 LEAN_SRC := GraphosLeanCritique/Critique.lean
 OBJS     := Critique.o abi_shim.o
@@ -85,7 +90,8 @@ graphos-lean-critique.pc: graphos-lean-critique.pc.in VERSION
 	sed -e 's|@PREFIX@|$(PREFIX)|g' \
 	    -e 's|@VERSION@|$(VERSION)|g' \
 	    -e 's|@ABI_VERSION@|$(ABI_VERSION)|g' \
-	    -e 's|@LEAN_LIBDIR@|$(LEAN_LIBDIR)|g' $< > $@
+	    -e 's|@LEAN_LIBDIR@|$(LEAN_LIBDIR)|g' \
+	    -e 's|@LIBS_PRIVATE@|$(LEAN_LINK_LIBS)|g' $< > $@
 
 pkgconfig: graphos-lean-critique.pc
 
@@ -104,7 +110,7 @@ test: abi_smoke
 # ccall — the contract from the consumer side (the whole point of the bridge).
 consumer: libgraphoslean.a tests/haskell/Consumer.hs
 	$(GHC) -package-env - -O1 tests/haskell/Consumer.hs libgraphoslean.a \
-	  -L$(LEAN_LIBDIR) $(addprefix -L,$(EXTRA_LIB_DIRS)) $(LEAN_LINK_LIBS) \
+	  $(addprefix -L,$(EXTRA_LIB_DIRS)) $(GHC_LEAN_LIBS) \
 	  $(EXTRA_LDFLAGS) -o $@
 
 test-haskell: consumer

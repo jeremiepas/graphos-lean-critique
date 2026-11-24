@@ -10,6 +10,10 @@ URL: https://github.com/jeremiepas/graphos-lean-critique
 Version: @VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lgraphoslean
-# Lean runtime and C++ dependencies. Link statically with `pkg-config --static`.
+# Lean runtime and C++ dependencies, as reported by the toolchain that built
+# this library (`leanc --print-ldflags`): elan's Lean links libc++, Nix's links
+# libstdc++. Link statically with `pkg-config --static`. `leanlibdir` is the
+# build machine's toolchain path: override it for your own toolchain with
+#   pkg-config --define-variable=leanlibdir=<toolchain>/lib/lean --static ...
 # gmp and libuv are system dependencies (NixOS: pkgs.gmp, pkgs.libuv).
-Libs.private: -L${leanlibdir} -lleancpp -lLean -lStd -lInit -lleanrt -lstdc++ -lgmp -luv -lm -ldl -pthread
+Libs.private: @LIBS_PRIVATE@

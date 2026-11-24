@@ -54,6 +54,6 @@ shim (argument normalisation included), this file exercises the Lean predicate.
 #guard abiVersionImpl 0 == abiVersion
 #guard versionMajor == 0
 #guard versionMinor == 2
-#guard versionPatch == 0
-#guard packedSemver == 200
+#guard versionPatch == 1
+#guard packedSemver == 201
 #guard semverImpl 0 == packedSemver

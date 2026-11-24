@@ -34,17 +34,17 @@ def abiVersionImpl (_unit : UInt8) : UInt32 := 0
     `GRAPHOS_LEAN_CRITIQUE_VERSION_*` macros and `lakefile.toml`. -/
 def versionMajor : UInt32 := 0
 def versionMinor : UInt32 := 2
-def versionPatch : UInt32 := 0
+def versionPatch : UInt32 := 1
 
 /-- Packed SemVer, `major * 10000 + minor * 100 + patch`, so a scalar ABI can
-    carry the full release version. For 0.2.0 this is `200`. -/
+    carry the full release version. For 0.2.1 this is `201`. -/
 def packedSemver : UInt32 :=
   versionMajor * 10000 + versionMinor * 100 + versionPatch
 
 /-- Exported SemVer query; literal for the same reason as `abiVersionImpl`.
     `semverImpl_eq` keeps it equal to `packedSemver`. -/
 @[export graphos_lean_critique_semver_impl]
-def semverImpl (_unit : UInt8) : UInt32 := 200
+def semverImpl (_unit : UInt8) : UInt32 := 201
 
 /-! ## Score predicate (ABI v0) -/
 

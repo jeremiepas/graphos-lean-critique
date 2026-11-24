@@ -27,10 +27,10 @@ extern "C" {
 #define GRAPHOS_LEAN_CRITIQUE_ABI_VERSION 0
 
 /* Release version (SemVer). Must equal the contents of the VERSION file. */
-#define GRAPHOS_LEAN_CRITIQUE_VERSION "0.2.0"
+#define GRAPHOS_LEAN_CRITIQUE_VERSION "0.2.1"
 #define GRAPHOS_LEAN_CRITIQUE_VERSION_MAJOR 0
 #define GRAPHOS_LEAN_CRITIQUE_VERSION_MINOR 2
-#define GRAPHOS_LEAN_CRITIQUE_VERSION_PATCH 0
+#define GRAPHOS_LEAN_CRITIQUE_VERSION_PATCH 1
 
 /* Packed SemVer: major * 10000 + minor * 100 + patch (0.1.0 -> 100). */
 #define GRAPHOS_LEAN_CRITIQUE_SEMVER \

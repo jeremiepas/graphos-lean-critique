@@ -13,3 +13,6 @@ graphos-lean-critique.pc
 consumer
 consumer.hi
 consumer.o
+*.hi
+*.dyn_hi
+*.dyn_o

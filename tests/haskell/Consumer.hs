@@ -8,7 +8,7 @@
 -- invite (a nullary @[export] is a data symbol, not a function) and pins the
 -- fixtures that Graphos parity depends on.
 --
--- Usage: @consumer <expected-packed-semver>@ (0.2.0 -> 200).
+-- Usage: @consumer <expected-packed-semver>@ (0.2.1 -> 201).
 module Main (main) where
 
 import Data.Word (Word8, Word32, Word64)
@@ -38,7 +38,7 @@ main = do
   args <- getArgs
   let expectedSemver = case args of
         (s : _) -> read s
-        [] -> 200 -- 0.2.0; CI passes the value derived from VERSION
+        [] -> 201 -- 0.2.1; CI passes the value derived from VERSION
   abi <- c_abiVersion
   semver <- c_semver
   putStrLn $ "abi version = " ++ show abi

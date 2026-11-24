@@ -9,7 +9,7 @@ and archived into a static library that GHC links against.
 
 - **ABI v0**, frozen by the Graphos change
   [AVI-1677](https://github.com/jeremiepas/Graphos/tree/main/openspec/changes/AVI-1677-lean4-critique-replacement/contract-inventory.md)
-- **Version 0.2.0** (see [`CHANGELOG.md`](CHANGELOG.md))
+- **Version 0.2.1** (see [`CHANGELOG.md`](CHANGELOG.md))
 - Toolchain pinned to Lean `v4.29.1` (`lean-toolchain`)
 
 ## Status
@@ -22,7 +22,7 @@ Surface (ABI v0):
 | symbol | purpose |
 | --- | --- |
 | `graphos_lean_critique_abi_version` | monotonic ABI version (currently `0`) |
-| `graphos_lean_critique_semver` | packed release SemVer (`200` for 0.2.0) |
+| `graphos_lean_critique_semver` | packed release SemVer (`201` for 0.2.1) |
 | `graphos_surprise_score` | numeric arm of the Haskell `surpriseScore` |
 
 Reason strings, graph traversal, community mapping and top-N selection stay in

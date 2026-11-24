@@ -36,6 +36,7 @@ the resolved toolchain on failure.
 | `make shared` | `libgraphoslean.so` (same public symbols) |
 | `make pkgconfig` | `graphos-lean-critique.pc` |
 | `make test` | builds and runs `tests/c/abi_smoke.c` |
+| `make test-haskell` | links the archive into a GHC consumer (`tests/haskell/Consumer.hs`) and runs the fixtures |
 | `make header-check` | header compiles as C99 (`-pedantic`) and C++17 |
 | `make check` | header-check + test + version sync + surface checks |
 | `make bundle` | release tarball under `dist/` |
@@ -63,6 +64,17 @@ public header.
 
 With pkg-config, `pkg-config --static --cflags --libs graphos-lean-critique`
 yields the same flags (including the Lean runtime directory).
+
+`make test-haskell` proves that path: it builds `libgraphoslean.a`, links it
+into a plain GHC program and calls all three entry points through
+`foreign import ccall`, asserting the ABI fixtures and the version surface. On
+NixOS pass the gmp/libuv directories explicitly:
+
+```sh
+make test-haskell \
+  EXTRA_LIB_DIRS="$(nix eval --raw nixpkgs#libuv)/lib $(nix eval --raw nixpkgs#gmp)/lib" \
+  EXTRA_LDFLAGS="-optl-Wl,-rpath,$(nix eval --raw nixpkgs#libuv)/lib"
+```
 
 ## Troubleshooting
 

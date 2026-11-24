@@ -7,6 +7,14 @@ with the ABI policy in [`docs/governance.md`](docs/governance.md).
 
 ## [Unreleased]
 
+### Added
+
+- `tests/haskell/Consumer.hs` and `make test-haskell`: a plain GHC program links
+  `libgraphoslean.a` at build time and calls all three entry points through
+  `foreign import ccall`, asserting the fixtures and the version surface. Wired
+  into CI as a separate job, so ABI regressions of the kind that produced the
+  data-symbol bug fail on the consumer side too.
+
 ## [0.2.0] - 2026-11-24
 
 Stage 1 completion (Graphos AVI-1677, tasks 1.3 and 1.4): a stable C ABI,

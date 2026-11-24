@@ -44,6 +44,12 @@ else
 endif
 
 CCFLAGS  ?= -O2 -fPIC -Wall -Wextra -Werror
+# GHC consumer (tests the ABI from the side that actually links it).
+GHC ?= ghc
+LEAN_LINK_LIBS ?= -lleancpp -lLean -lStd -lInit -lleanrt -lstdc++ -lgmp -luv -lm -ldl -lpthread
+EXTRA_LIB_DIRS ?=
+EXTRA_LDFLAGS ?=
+PACKED_SEMVER := $(shell echo $(VERSION) | awk -F. '{print $$1*10000 + $$2*100 + $$3}')
 LEAN_SRC := GraphosLeanCritique/Critique.lean
 OBJS     := Critique.o abi_shim.o
 DIST     := dist/graphos-lean-critique-$(VERSION)
@@ -93,12 +99,22 @@ abi_smoke: libgraphoslean.a tests/c/abi_smoke.c
 test: abi_smoke
 	./abi_smoke
 
+# GHC links the archive at build time and calls it through foreign import
+# ccall — the contract from the consumer side (the whole point of the bridge).
+consumer: libgraphoslean.a tests/haskell/Consumer.hs
+	$(GHC) -package-env - -O1 tests/haskell/Consumer.hs libgraphoslean.a \
+	  -L$(LEAN_LIBDIR) $(addprefix -L,$(EXTRA_LIB_DIRS)) $(LEAN_LINK_LIBS) \
+	  $(EXTRA_LDFLAGS) -o $@
+
+test-haskell: consumer
+	./consumer $(PACKED_SEMVER)
+
 # Header must stay valid C99 and C++ (extern "C" guards, no C++-only syntax).
 header-check:
 	$(CC) -std=c99 -Wall -Wextra -Werror -pedantic -fsyntax-only -Iinclude tests/c/header_check.c
 	c++ -std=c++17 -Wall -Wextra -Werror -fsyntax-only -Iinclude -x c++ tests/c/header_check.c
 
-check: header-check test
+check: header-check test test-haskell
 	bash scripts/check-version-sync.sh
 	bash scripts/check-no-sorry.sh
 
@@ -123,7 +139,7 @@ install: libgraphoslean.a graphos-lean-critique.pc
 
 clean:
 	rm -f Critique.c Critique.o abi_shim.o libgraphoslean.a libgraphoslean.so \
-	      graphos-lean-critique.pc abi_smoke abi_smoke.o
+	      graphos-lean-critique.pc abi_smoke abi_smoke.o consumer consumer.hi consumer.o
 	rm -rf dist
 
-.PHONY: all shared pkgconfig test header-check check bundle install clean
+.PHONY: all shared pkgconfig test test-haskell header-check check bundle install clean

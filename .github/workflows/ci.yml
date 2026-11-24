@@ -71,3 +71,31 @@ jobs:
 
       - name: Release bundle builds
         run: make bundle
+
+  ghc-consumer:
+    name: GHC consumer links the ABI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System link dependencies
+        # GHC links through gcc, so the C++ runtime the Lean release was built
+        # against must be installed: elan's Linux Lean is built with libc++
+        # (-lc++ -lc++abi), Nix's with libstdc++.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgmp-dev libuv1-dev g++ libc++-dev libc++abi-dev
+
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.10'
+
+      - uses: leanprover/lean-action@v1
+        with:
+          use-cache: true
+
+      - name: Make the pinned toolchain visible to later steps
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Link libgraphoslean.a into a GHC program and run the fixtures
+        run: make test-haskell

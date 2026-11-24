@@ -10,3 +10,6 @@ cache/
 dist/
 abi_smoke
 graphos-lean-critique.pc
+consumer
+consumer.hi
+consumer.o

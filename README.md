@@ -38,7 +38,8 @@ lake build
 # C ABI: static library, shared library, pkg-config, smoke test
 make            # libgraphoslean.a
 make shared     # libgraphoslean.so
-make check      # header (C99 + C++17), ABI smoke test, version/surface checks
+make check      # header (C99 + C++17), C + GHC ABI smoke tests, version/surface checks
+make test-haskell  # link the archive into a GHC program and run the fixtures
 ```
 
 On NixOS, `make LEAN_PREFIX=/nix/store/<hash>-lean4-4.29.1`; with `lean` on
@@ -90,6 +91,7 @@ GraphosLeanCritique/Checks.lean     #guard executable fixtures (build-time)
 src/abi_shim.c                      stable public C ABI layer
 include/graphos_lean_critique.h     public header
 tests/c/                            ABI smoke test + header compile check
+tests/haskell/Consumer.hs           GHC consumer (the linking side of the bridge)
 scripts/                            version-sync and surface checks
 docs/                               ABI contract, build, release, governance
 ```

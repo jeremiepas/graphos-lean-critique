@@ -36,14 +36,26 @@ else
   LEANC := $(LEAN_PREFIX)/bin/leanc
 endif
 
-ifneq ($(wildcard $(LEAN)),)
-  LEAN_REAL   := $(shell readlink -f $(LEAN))
-  LEAN_LIBDIR := $(abspath $(dir $(LEAN_REAL))../lib/lean)
+ifneq ($(wildcard $(LEANC)),)
+  # Ask the toolchain itself: elan installs `lean` as a shim, so resolving the
+  # binary's realpath does not lead to the toolchain's lib/lean directory.
+  LEAN_LIBDIR := $(shell $(LEANC) --print-ldflags 2>/dev/null | awk '{for (i = 1; i <= NF; i++) { if ($$i == "-L") { print $$(i+1); exit } if ($$i ~ /^-L./) { sub(/^-L/, "", $$i); print $$i; exit } }}')
 else
-  LEAN_LIBDIR := $(shell $(LEANC) --print-ldflags 2>/dev/null | tr ' ' '\n' | grep -m1 '^-L' | cut -c3-)
+  LEAN_LIBDIR :=
 endif
 
 CCFLAGS  ?= -O2 -fPIC -Wall -Wextra -Werror
+# GHC consumer (tests the ABI from the side that actually links it).
+GHC ?= ghc
+# Runtime link line comes from the toolchain itself: elan's Lean links libc++,
+# Nix's links libstdc++. See scripts/lean-link-libs.sh.
+LEAN_LINK_LIBS ?= $(shell LEANC="$(LEANC)" bash scripts/lean-link-libs.sh 2>/dev/null)
+EXTRA_LIB_DIRS ?=
+EXTRA_LDFLAGS ?=
+# Same link line, spelled for GHC: GHC parses -Wl,... as a warning flag and
+# rejects bare -pthread, so both have to go through the -optl prefix.
+GHC_LEAN_LIBS := $(shell LEANC="$(LEANC)" bash scripts/lean-link-libs.sh 2>/dev/null | sed -e 's/-Wl,/-optl-Wl,/g' -e 's/ -pthread/ -optl-pthread/g')
+PACKED_SEMVER := $(shell echo $(VERSION) | awk -F. '{print $$1*10000 + $$2*100 + $$3}')
 LEAN_SRC := GraphosLeanCritique/Critique.lean
 OBJS     := Critique.o abi_shim.o
 DIST     := dist/graphos-lean-critique-$(VERSION)
@@ -78,7 +90,8 @@ graphos-lean-critique.pc: graphos-lean-critique.pc.in VERSION
 	sed -e 's|@PREFIX@|$(PREFIX)|g' \
 	    -e 's|@VERSION@|$(VERSION)|g' \
 	    -e 's|@ABI_VERSION@|$(ABI_VERSION)|g' \
-	    -e 's|@LEAN_LIBDIR@|$(LEAN_LIBDIR)|g' $< > $@
+	    -e 's|@LEAN_LIBDIR@|$(LEAN_LIBDIR)|g' \
+	    -e 's|@LIBS_PRIVATE@|$(LEAN_LINK_LIBS)|g' $< > $@
 
 pkgconfig: graphos-lean-critique.pc
 
@@ -93,12 +106,22 @@ abi_smoke: libgraphoslean.a tests/c/abi_smoke.c
 test: abi_smoke
 	./abi_smoke
 
+# GHC links the archive at build time and calls it through foreign import
+# ccall — the contract from the consumer side (the whole point of the bridge).
+consumer: libgraphoslean.a tests/haskell/Consumer.hs
+	$(GHC) -package-env - -O1 tests/haskell/Consumer.hs libgraphoslean.a \
+	  $(addprefix -L,$(EXTRA_LIB_DIRS)) $(GHC_LEAN_LIBS) \
+	  $(EXTRA_LDFLAGS) -o $@
+
+test-haskell: consumer
+	./consumer $(PACKED_SEMVER)
+
 # Header must stay valid C99 and C++ (extern "C" guards, no C++-only syntax).
 header-check:
 	$(CC) -std=c99 -Wall -Wextra -Werror -pedantic -fsyntax-only -Iinclude tests/c/header_check.c
 	c++ -std=c++17 -Wall -Wextra -Werror -fsyntax-only -Iinclude -x c++ tests/c/header_check.c
 
-check: header-check test
+check: header-check test test-haskell
 	bash scripts/check-version-sync.sh
 	bash scripts/check-no-sorry.sh
 
@@ -123,7 +146,7 @@ install: libgraphoslean.a graphos-lean-critique.pc
 
 clean:
 	rm -f Critique.c Critique.o abi_shim.o libgraphoslean.a libgraphoslean.so \
-	      graphos-lean-critique.pc abi_smoke abi_smoke.o
+	      graphos-lean-critique.pc abi_smoke abi_smoke.o consumer consumer.hi consumer.o
 	rm -rf dist
 
-.PHONY: all shared pkgconfig test header-check check bundle install clean
+.PHONY: all shared pkgconfig test test-haskell header-check check bundle install clean

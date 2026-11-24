@@ -58,10 +58,25 @@ if [ "$abi_header" != "$abi_lean" ]; then
 fi
 note "ABI version (header = Lean)" "$abi_header"
 
+# The exported version functions are literals (Lean lifts closed UInt32 defs to
+# globals initialised at runtime, which a pure C caller never runs), so the
+# literals must be checked explicitly against the canonical values.
+abi_export="$(sed -n 's/^def abiVersionImpl (_unit : UInt8) : UInt32 := \([0-9]*\)$/\1/p' GraphosLeanCritique/Critique.lean)"
+if [ "$abi_export" != "$abi_header" ]; then
+  err "abiVersionImpl literal has '$abi_export', want '$abi_header'"
+fi
+note "Lean abiVersionImpl literal" "$abi_export"
+
+packed=$(( major * 10000 + minor * 100 + patch ))
+semver_export="$(sed -n 's/^def semverImpl (_unit : UInt8) : UInt32 := \([0-9]*\)$/\1/p' GraphosLeanCritique/Critique.lean)"
+if [ "$semver_export" != "$packed" ]; then
+  err "semverImpl literal has '$semver_export', want '$packed'"
+fi
+note "Lean semverImpl literal (packed SemVer)" "$semver_export"
+
 # The packed semver must appear in the docs table if present.
 if [ -f docs/abi.md ]; then
-  packed=$(( major * 10000 + minor * 100 + patch ))
-  if ! grep -q "packed SemVer.*$packed" docs/abi.md; then
+  if ! grep -q "packed SemVer.*$packed\|| \`$packed\` | packed SemVer" docs/abi.md; then
     echo "note: docs/abi.md does not mention packed SemVer $packed" >&2
   fi
 fi

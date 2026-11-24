@@ -69,6 +69,6 @@ yields the same flags (including the Lean runtime directory).
 - `undefined reference to lean_*` — the Lean runtime libraries are missing from
   the link line; use `pkg-config --static` or the `Libs.private` list above.
 - `cannot execute graphos_lean_critique_abi_version` / crash on the version call
-  — the consumer linked the pre-0.1.0 release, where the version symbol was a
-  Lean data symbol rather than a function. Upgrade to 0.1.0 or later.
+  — the consumer linked the pre-0.2.0 release, where the version symbol was a
+  Lean data symbol rather than a function. Upgrade to 0.2.0 or later.
 - Wrong store path in `LEAN_PREFIX` — `ls /nix/store/*-lean4-4.29.1/bin`.

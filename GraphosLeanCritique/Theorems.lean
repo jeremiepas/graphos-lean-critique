@@ -80,5 +80,11 @@ theorem surpriseScore_deterministic
 /-- The ABI version is the frozen v0 value. -/
 theorem abiVersion_eq_zero : abiVersion = 0 := rfl
 
+/-- The literal exported by `abiVersionImpl` equals `abiVersion`. -/
+theorem abiVersionImpl_eq : abiVersionImpl 0 = abiVersion := by decide
+
 /-- Packed SemVer agrees with its components. -/
-theorem packedSemver_eq : packedSemver = 100 := by decide
+theorem packedSemver_eq : packedSemver = 200 := by decide
+
+/-- The literal exported by `semverImpl` equals `packedSemver`. -/
+theorem semverImpl_eq : semverImpl 0 = packedSemver := by decide

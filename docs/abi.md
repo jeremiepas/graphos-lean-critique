@@ -16,14 +16,14 @@ MINOR release (see [`governance.md`](governance.md)).
 
 ## Version surface
 
-| macro / symbol | value (0.1.0) | meaning |
+| macro / symbol | value (0.2.0) | meaning |
 | --- | --- | --- |
 | `GRAPHOS_LEAN_CRITIQUE_ABI_VERSION` | `0` | monotonic ABI version |
-| `GRAPHOS_LEAN_CRITIQUE_VERSION` | `"0.1.0"` | release SemVer string |
-| `GRAPHOS_LEAN_CRITIQUE_VERSION_{MAJOR,MINOR,PATCH}` | `0,1,0` | SemVer components |
-| `GRAPHOS_LEAN_CRITIQUE_SEMVER` | `100` | packed SemVer, `major*10000 + minor*100 + patch` |
+| `GRAPHOS_LEAN_CRITIQUE_VERSION` | `"0.2.0"` | release SemVer string |
+| `GRAPHOS_LEAN_CRITIQUE_VERSION_{MAJOR,MINOR,PATCH}` | `0,2,0` | SemVer components |
+| `GRAPHOS_LEAN_CRITIQUE_SEMVER` | `200` | packed SemVer, `major*10000 + minor*100 + patch` |
 | `graphos_lean_critique_abi_version(void)` | `0` | ABI version implemented by the linked library |
-| `graphos_lean_critique_semver(void)` | `100` | packed SemVer of the linked release |
+| `graphos_lean_critique_semver(void)` | `200` | packed SemVer of the linked release |
 
 Consumers must check `graphos_lean_critique_abi_version() ==
 GRAPHOS_LEAN_CRITIQUE_ABI_VERSION` before using the score predicate, and may
@@ -97,7 +97,11 @@ free, and safe to call concurrently. The Lean runtime does **not** need to be
 initialised (`lean_initialize`) before calling them: no boxed Lean object is
 touched. This is why the exported Lean functions (`*_impl`) take scalar
 arguments — a nullary `@[export]` becomes a data symbol initialised only by the
-Lean module initialiser.
+Lean module initialiser — and why the version exports return **literals**:
+Lean lifts a closed `UInt32` definition to a runtime global, which a caller that
+never runs the initialiser would read as `0`. `scripts/check-version-sync.sh`
+checks those literals against `VERSION`, and `#guard`s plus `semverImpl_eq` /
+`abiVersionImpl_eq` keep them equal to the documented constants.
 
 ## Determinism and ordering
 

@@ -17,24 +17,34 @@
     Keep in sync with `GRAPHOS_LEAN_CRITIQUE_ABI_VERSION` in the C header. -/
 def abiVersion : UInt32 := 0
 
+/-- Exported ABI version query.
+
+    The body is a literal on purpose: Lean lifts a closed `UInt32` definition
+    such as `abiVersion` to a runtime **global** initialised by the module
+    initialiser, and a pure C caller never runs that initialiser. Literals are
+    compiled inline, so this function is safe to call before
+    `lean_initialize`. `abiVersionImpl_eq` and the `#guard`s in
+    `GraphosLeanCritique/Checks.lean` keep the literal and `abiVersion` equal. -/
 @[export graphos_lean_critique_abi_version_impl]
-def abiVersionImpl (_unit : UInt8) : UInt32 := abiVersion
+def abiVersionImpl (_unit : UInt8) : UInt32 := 0
 
 /-! ## Package semver -/
 
 /-- SemVer components of this release. Keep in sync with `VERSION`, the
     `GRAPHOS_LEAN_CRITIQUE_VERSION_*` macros and `lakefile.toml`. -/
 def versionMajor : UInt32 := 0
-def versionMinor : UInt32 := 1
+def versionMinor : UInt32 := 2
 def versionPatch : UInt32 := 0
 
 /-- Packed SemVer, `major * 10000 + minor * 100 + patch`, so a scalar ABI can
-    carry the full release version. For 0.1.0 this is `100`. -/
+    carry the full release version. For 0.2.0 this is `200`. -/
 def packedSemver : UInt32 :=
   versionMajor * 10000 + versionMinor * 100 + versionPatch
 
+/-- Exported SemVer query; literal for the same reason as `abiVersionImpl`.
+    `semverImpl_eq` keeps it equal to `packedSemver`. -/
 @[export graphos_lean_critique_semver_impl]
-def semverImpl (_unit : UInt8) : UInt32 := packedSemver
+def semverImpl (_unit : UInt8) : UInt32 := 200
 
 /-! ## Score predicate (ABI v0) -/
 

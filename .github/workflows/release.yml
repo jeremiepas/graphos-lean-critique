@@ -52,8 +52,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd dist
-          sha256sum graphos-lean-critique-* > SHA256SUMS
+          sha256sum ./*.tar.gz > SHA256SUMS
           gh release create "${GITHUB_REF_NAME}" \
-            graphos-lean-critique-*-linux-*.tar.gz SHA256SUMS \
+            ./graphos-lean-critique-*-linux-*.tar.gz ./SHA256SUMS \
             --title "graphos-lean-critique ${GITHUB_REF_NAME}" \
             --generate-notes

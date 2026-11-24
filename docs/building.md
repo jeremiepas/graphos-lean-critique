@@ -15,6 +15,9 @@ Two independent builds live in this repository:
 - A C compiler (`cc`), `ar`, and a C++ runtime (`libstdc++`) for the Lean
   runtime.
 - `gmp` and `libuv` development libraries at link time.
+- The C++ runtime the Lean release was built against: elan's Linux Lean is
+  built with libc++ (deb: `libc++-dev libc++abi-dev`), Nix's lean4 with
+  libstdc++ (`g++`). `scripts/lean-link-libs.sh` prints the exact line.
 
 NixOS:
 

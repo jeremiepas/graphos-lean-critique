@@ -1,5 +1,6 @@
+# Generated sources and build products
+/Critique.c
 *.olean
-*.c
 *.o
 *.a
 *.so

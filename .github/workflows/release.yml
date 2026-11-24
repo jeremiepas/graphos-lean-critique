@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches VERSION
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match VERSION ${version}"
+            exit 1
+          fi
+
+      - name: System link dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgmp-dev libuv1-dev g++
+
+      - uses: leanprover/lean-action@v1
+        with:
+          use-cache: true
+
+      - name: Make the pinned toolchain visible to later steps
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Full local gate
+        run: |
+          make check
+          make bundle
+
+      - name: Verify the bundle actually links and runs
+        run: |
+          tmp="$(mktemp -d)"
+          tar -xzf dist/graphos-lean-critique-*-linux-*.tar.gz -C "$tmp"
+          root="$(find "$tmp" -maxdepth 1 -mindepth 1 -type d | head -1)"
+          cp tests/c/abi_smoke.c "$tmp/"
+          leanc -I"$root/include" "$tmp/abi_smoke.c" "$root/lib/libgraphoslean.a" -o "$tmp/abi_smoke"
+          PKG_CONFIG_PATH="$root/lib/pkgconfig" "$tmp/abi_smoke"
+
+      - name: Publish release with bundle and checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          sha256sum graphos-lean-critique-* > SHA256SUMS
+          gh release create "${GITHUB_REF_NAME}" \
+            graphos-lean-critique-*-linux-*.tar.gz SHA256SUMS \
+            --title "graphos-lean-critique ${GITHUB_REF_NAME}" \
+            --generate-notes

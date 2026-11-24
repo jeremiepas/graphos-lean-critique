@@ -1,2 +1,3 @@
 import GraphosLeanCritique.Critique
 import GraphosLeanCritique.Theorems
+import GraphosLeanCritique.Checks

@@ -1,21 +1,73 @@
-name: Lean 4 build
+name: CI
 
 on:
   push:
     branches: [main]
+    tags-ignore: ['v*']
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  lake-build:
+  lean:
+    name: Lean build and proofs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: leanprover/lean-action@v1
         with:
           use-cache: true
-      - run: lake build
-      - name: Build C ABI
-        run: make
+
+      - name: Make the pinned toolchain visible to later steps
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: lake build (warnings are errors)
+        run: |
+          set -o pipefail
+          lake build 2>&1 | tee lake-build.log
+          if grep -n 'warning:' lake-build.log; then
+            echo "::error::lake build produced warnings"
+            exit 1
+          fi
+
+      - name: No sorry / admit; ABI module stays import-free
+        run: bash scripts/check-no-sorry.sh
+
+      - name: Version constants agree everywhere
+        run: bash scripts/check-version-sync.sh
+
+  abi:
+    name: C ABI build and smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System link dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgmp-dev libuv1-dev g++
+
+      - uses: leanprover/lean-action@v1
+        with:
+          use-cache: true
+
+      - name: Make the pinned toolchain visible to later steps
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Build static + shared library and pkg-config file
+        run: make libgraphoslean.a libgraphoslean.so pkgconfig
+
+      - name: Header is valid C99 and C++17
+        run: make header-check
+
+      - name: ABI v0 smoke test
+        run: make test
+
+      - name: pkg-config describes the archive
+        run: |
+          PKG_CONFIG_PATH="$PWD" pkg-config --validate graphos-lean-critique.pc
+          PKG_CONFIG_PATH="$PWD" pkg-config --exists --print-errors graphos-lean-critique
+          PKG_CONFIG_PATH="$PWD" pkg-config --static --libs graphos-lean-critique
+
+      - name: Release bundle builds
+        run: make bundle

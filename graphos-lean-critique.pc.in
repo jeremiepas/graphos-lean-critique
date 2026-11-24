@@ -1,0 +1,15 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+leanlibdir=@LEAN_LIBDIR@
+
+Name: graphos-lean-critique
+Description: Lean 4 critique predicates for Graphos, exported as a versioned C ABI
+URL: https://github.com/jeremiepas/graphos-lean-critique
+Version: @VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lgraphoslean
+# Lean runtime and C++ dependencies. Link statically with `pkg-config --static`.
+# gmp and libuv are system dependencies (NixOS: pkgs.gmp, pkgs.libuv).
+Libs.private: -L${leanlibdir} -lleancpp -lLean -lStd -lInit -lleanrt -lstdc++ -lgmp -luv -lm -ldl -pthread

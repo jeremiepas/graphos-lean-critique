@@ -33,8 +33,13 @@ jobs:
         run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Full local gate
+        # The GHC consumer contract is gated by the CI workflow on every PR and
+        # push; the release job only needs the artifacts it publishes.
         run: |
-          make check
+          make header-check
+          make test
+          bash scripts/check-version-sync.sh
+          bash scripts/check-no-sorry.sh
           make bundle
 
       - name: Verify the bundle actually links and runs

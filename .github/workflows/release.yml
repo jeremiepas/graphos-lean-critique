@@ -43,8 +43,9 @@ jobs:
           tar -xzf dist/graphos-lean-critique-*-linux-*.tar.gz -C "$tmp"
           root="$(find "$tmp" -maxdepth 1 -mindepth 1 -type d | head -1)"
           cp tests/c/abi_smoke.c "$tmp/"
-          leanc -I"$root/include" "$tmp/abi_smoke.c" "$root/lib/libgraphoslean.a" -o "$tmp/abi_smoke"
-          PKG_CONFIG_PATH="$root/lib/pkgconfig" "$tmp/abi_smoke"
+          cc -O2 -I"$root/include" -c "$tmp/abi_smoke.c" -o "$tmp/abi_smoke.o"
+          leanc "$tmp/abi_smoke.o" "$root/lib/libgraphoslean.a" -o "$tmp/abi_smoke"
+          "$tmp/abi_smoke"
 
       - name: Publish release with bundle and checksums
         env:

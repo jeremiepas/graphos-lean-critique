@@ -83,8 +83,12 @@ graphos-lean-critique.pc: graphos-lean-critique.pc.in VERSION
 pkgconfig: graphos-lean-critique.pc
 
 # ── Tests ────────────────────────────────────────────────────────────────────
+# Compile the C test with the system compiler (Lean's `leanc` driver may point
+# at a toolchain without the system C headers on some CI images) and link it
+# with `leanc`, which supplies the Lean runtime link line.
 abi_smoke: libgraphoslean.a tests/c/abi_smoke.c
-	$(LEANC) -Iinclude tests/c/abi_smoke.c libgraphoslean.a -o $@
+	$(CC) $(CCFLAGS) -Iinclude -c tests/c/abi_smoke.c -o abi_smoke.o
+	$(LEANC) abi_smoke.o libgraphoslean.a -o $@
 
 test: abi_smoke
 	./abi_smoke
@@ -119,7 +123,7 @@ install: libgraphoslean.a graphos-lean-critique.pc
 
 clean:
 	rm -f Critique.c Critique.o abi_shim.o libgraphoslean.a libgraphoslean.so \
-	      graphos-lean-critique.pc abi_smoke
+	      graphos-lean-critique.pc abi_smoke abi_smoke.o
 	rm -rf dist
 
 .PHONY: all shared pkgconfig test header-check check bundle install clean

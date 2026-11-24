@@ -16,14 +16,14 @@ MINOR release (see [`governance.md`](governance.md)).
 
 ## Version surface
 
-| macro / symbol | value (0.2.0) | meaning |
+| macro / symbol | value (0.2.1) | meaning |
 | --- | --- | --- |
 | `GRAPHOS_LEAN_CRITIQUE_ABI_VERSION` | `0` | monotonic ABI version |
-| `GRAPHOS_LEAN_CRITIQUE_VERSION` | `"0.2.0"` | release SemVer string |
+| `GRAPHOS_LEAN_CRITIQUE_VERSION` | `"0.2.1"` | release SemVer string |
 | `GRAPHOS_LEAN_CRITIQUE_VERSION_{MAJOR,MINOR,PATCH}` | `0,2,0` | SemVer components |
-| `GRAPHOS_LEAN_CRITIQUE_SEMVER` | `200` | packed SemVer, `major*10000 + minor*100 + patch` |
+| `GRAPHOS_LEAN_CRITIQUE_SEMVER` | `201` | packed SemVer, `major*10000 + minor*100 + patch` |
 | `graphos_lean_critique_abi_version(void)` | `0` | ABI version implemented by the linked library |
-| `graphos_lean_critique_semver(void)` | `200` | packed SemVer of the linked release |
+| `graphos_lean_critique_semver(void)` | `201` | packed SemVer of the linked release |
 
 Consumers must check `graphos_lean_critique_abi_version() ==
 GRAPHOS_LEAN_CRITIQUE_ABI_VERSION` before using the score predicate, and may

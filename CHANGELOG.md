@@ -7,13 +7,33 @@ with the ABI policy in [`docs/governance.md`](docs/governance.md).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-24
+
+Patch release: the published pkg-config link line was wrong for consumers that
+link through a compiler other than `leanc`, and the GHC consumer contract was
+untested.
+
 ### Added
 
 - `tests/haskell/Consumer.hs` and `make test-haskell`: a plain GHC program links
   `libgraphoslean.a` at build time and calls all three entry points through
-  `foreign import ccall`, asserting the fixtures and the version surface. Wired
-  into CI as a separate job, so ABI regressions of the kind that produced the
-  data-symbol bug fail on the consumer side too.
+  `foreign import ccall`, asserting the fixtures and the version surface. New
+  `ghc-consumer` CI job.
+- `scripts/lean-link-libs.sh`: prints GHC/gcc-compatible runtime link flags from
+  `leanc --print-ldflags`.
+
+### Fixed
+
+- `graphos-lean-critique.pc` `Libs.private` hardcoded `-lstdc++`, but the Lean
+  release a consumer links was built against a different C++ runtime depending
+  on distribution (elan's Linux Lean uses libc++, Nix's lean4 uses libstdc++).
+  `Libs.private` is now generated from the toolchain that built the library, and
+  the `leanlibdir` variable can be overridden with
+  `pkg-config --define-variable=leanlibdir=...`.
+- The build no longer derives the runtime library directory by resolving the
+  `lean` binary: elan installs a shim, so the previous realpath heuristic
+  pointed at `~/.elan/lib/lean` instead of the toolchain.
+- `tests/haskell/Consumer.hi` is no longer tracked (`*.hi` ignored).
 
 ## [0.2.0] - 2026-11-24
 
@@ -71,6 +91,7 @@ Stage 1 bootstrap release (Graphos AVI-1677, tasks 1.1 and 1.2).
 - `Makefile` producing `libgraphoslean.a`, a minimal CI workflow, and initial
   build/link documentation.
 
-[Unreleased]: https://github.com/jeremiepas/graphos-lean-critique/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jeremiepas/graphos-lean-critique/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/jeremiepas/graphos-lean-critique/releases/tag/v0.2.1
 [0.2.0]: https://github.com/jeremiepas/graphos-lean-critique/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jeremiepas/graphos-lean-critique/releases/tag/v0.1.0

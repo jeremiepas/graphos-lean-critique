@@ -36,11 +36,12 @@ else
   LEANC := $(LEAN_PREFIX)/bin/leanc
 endif
 
-ifneq ($(wildcard $(LEAN)),)
-  LEAN_REAL   := $(shell readlink -f $(LEAN))
-  LEAN_LIBDIR := $(abspath $(dir $(LEAN_REAL))../lib/lean)
+ifneq ($(wildcard $(LEANC)),)
+  # Ask the toolchain itself: elan installs `lean` as a shim, so resolving the
+  # binary's realpath does not lead to the toolchain's lib/lean directory.
+  LEAN_LIBDIR := $(shell $(LEANC) --print-ldflags 2>/dev/null | awk '{for (i = 1; i <= NF; i++) { if ($$i == "-L") { print $$(i+1); exit } if ($$i ~ /^-L./) { sub(/^-L/, "", $$i); print $$i; exit } }}')
 else
-  LEAN_LIBDIR := $(shell $(LEANC) --print-ldflags 2>/dev/null | tr ' ' '\n' | grep -m1 '^-L' | cut -c3-)
+  LEAN_LIBDIR :=
 endif
 
 CCFLAGS  ?= -O2 -fPIC -Wall -Wextra -Werror

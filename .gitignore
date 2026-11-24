@@ -1,7 +1,12 @@
+# Generated sources and build products
+/Critique.c
 *.olean
-*.c
 *.o
 *.a
+*.so
 .lake/
 lake-packages/
 cache/
+dist/
+abi_smoke
+graphos-lean-critique.pc
